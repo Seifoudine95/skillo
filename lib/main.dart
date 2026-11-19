@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:skillo/views/utilisateur/connexion.dart';
+import 'package:skillo/views/utilisateur/inscription.dart';
 
 void main() {
   runApp(const MyApp());
@@ -8,6 +9,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const Connexion(),
+      home: const Inscription(),
     );
   }
 }
