@@ -15,10 +15,4 @@ class Matiere {
       description: data['description'] ?? '',
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {'nom': nom, 'description': description};
-  }
-
-
 }

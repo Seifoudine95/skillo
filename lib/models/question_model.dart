@@ -25,13 +25,4 @@ class QuestionQcm {
       reponse: data['reponse'] ?? "",
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'matiere': matiere,
-      'question': question,
-      'options': options,
-      'reponse': reponse,
-    };
-  }
 }
