@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skillo/views/admin/tableau_de_bord_admin.dart';
 
@@ -6,7 +7,9 @@ void main() {
   testWidgets('dashboard shows results in date order', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: TableauDeBordAdmin())),
+    );
 
     expect(find.text('Résultats récents'), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -36,7 +39,9 @@ void main() {
   testWidgets('search filters candidates by first or last name', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: TableauDeBordAdmin())),
+    );
 
     await tester.enterText(find.byType(TextField), 'camille');
     await tester.pumpAndSettle();
@@ -46,7 +51,9 @@ void main() {
   });
 
   testWidgets('school year filters results', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: TableauDeBordAdmin())),
+    );
 
     await tester.tap(find.byType(DropdownButtonFormField<String>).first);
     await tester.pumpAndSettle();
@@ -61,7 +68,9 @@ void main() {
   testWidgets('statistics page calculates success rates from results', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: TableauDeBordAdmin())),
+    );
     await tester.tap(find.text('Statistiques'));
     await tester.pumpAndSettle();
 
@@ -94,7 +103,9 @@ void main() {
   testWidgets('statistics are filtered by school year', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.pumpWidget(
+      const ProviderScope(child: MaterialApp(home: TableauDeBordAdmin())),
+    );
     await tester.tap(find.text('Statistiques'));
     await tester.pumpAndSettle();
 

@@ -1,66 +1,30 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:skillo/models/resultat_candidat_model.dart';
+import 'package:skillo/providers/providers.dart';
+import 'package:skillo/repository/tableau_de_bord_repository.dart';
 
-class TableauDeBordAdmin extends StatefulWidget {
+class TableauDeBordAdmin extends ConsumerStatefulWidget {
   const TableauDeBordAdmin({super.key});
 
   @override
-  State<TableauDeBordAdmin> createState() => _TableauDeBordAdminState();
+  ConsumerState<TableauDeBordAdmin> createState() => _TableauDeBordAdminState();
 }
 
-class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
-  final List<_ResultatCandidat> resultats = [
-    _ResultatCandidat(
-      prenom: 'Ami',
-      nom: 'Diallo',
-      matiere: 'HTML / CSS',
-      score: 8,
-      totalQuestions: 10,
-      date: DateTime(2026, 11, 20),
-    ),
-    _ResultatCandidat(
-      prenom: 'Yanis',
-      nom: 'Morel',
-      matiere: 'Java',
-      score: 4,
-      totalQuestions: 10,
-      date: DateTime(2026, 11, 18),
-    ),
-    _ResultatCandidat(
-      prenom: 'Camille',
-      nom: 'Bernard',
-      matiere: 'Algorithmique',
-      score: 9,
-      totalQuestions: 10,
-      date: DateTime(2026, 4, 8),
-    ),
-  ];
-
+class _TableauDeBordAdminState extends ConsumerState<TableauDeBordAdmin> {
   String recherche = '';
   String anneeSelectionnee = 'Toutes';
 
-  List<_ResultatCandidat> get resultatsFiltres {
-    final liste = <_ResultatCandidat>[];
-
-    for (final resultat in resultats) {
-      final nomComplet = '${resultat.prenom} ${resultat.nom}'.toLowerCase();
-      final correspondAlaRecherche = nomComplet.contains(
-        recherche.toLowerCase(),
-      );
-      final correspondAlaAnnee =
-          anneeSelectionnee == 'Toutes' ||
-          _anneeScolaire(resultat.date) == anneeSelectionnee;
-
-      if (correspondAlaRecherche && correspondAlaAnnee) {
-        liste.add(resultat);
-      }
-    }
-
-    liste.sort((a, b) => b.date.compareTo(a.date));
-    return liste;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final repository = ref.watch(tableauDeBordRepositoryProvider);
+    final resultats = repository.getResultats();
+    final resultatsFiltres = repository.filtrerResultats(
+      resultats,
+      recherche,
+      anneeSelectionnee,
+    );
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -122,6 +86,7 @@ class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
                     _PageTableauDeBord(
                       resultats: resultatsFiltres,
                       anneeSelectionnee: anneeSelectionnee,
+                      repository: repository,
                       onRechercheChangee: (value) {
                         setState(() {
                           recherche = value;
@@ -141,6 +106,7 @@ class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
                           anneeSelectionnee = value;
                         });
                       },
+                      repository: repository,
                     ),
                   ],
                 ),
@@ -157,12 +123,14 @@ class _PageTableauDeBord extends StatelessWidget {
   const _PageTableauDeBord({
     required this.resultats,
     required this.anneeSelectionnee,
+    required this.repository,
     required this.onRechercheChangee,
     required this.onAnneeChangee,
   });
 
-  final List<_ResultatCandidat> resultats;
+  final List<ResultatCandidat> resultats;
   final String anneeSelectionnee;
+  final TableauDeBordRepository repository;
   final ValueChanged<String> onRechercheChangee;
   final ValueChanged<String> onAnneeChangee;
 
@@ -219,7 +187,7 @@ class _PageTableauDeBord extends StatelessWidget {
                 subtitle: Text(
                   '${resultat.matiere} · ${resultat.score}/${resultat.totalQuestions}'
                   '\n${_dateTexte(resultat.date)} · '
-                  '${_anneeScolaire(resultat.date)}',
+                  '${repository.anneeScolaire(resultat.date)}',
                 ),
                 isThreeLine: true,
               ),
@@ -227,29 +195,6 @@ class _PageTableauDeBord extends StatelessWidget {
       ],
     );
   }
-}
-
-class _ResultatCandidat {
-  const _ResultatCandidat({
-    required this.prenom,
-    required this.nom,
-    required this.matiere,
-    required this.score,
-    required this.totalQuestions,
-    required this.date,
-  });
-
-  final String prenom;
-  final String nom;
-  final String matiere;
-  final int score;
-  final int totalQuestions;
-  final DateTime date;
-}
-
-String _anneeScolaire(DateTime date) {
-  final anneeDebut = date.month >= 9 ? date.year : date.year - 1;
-  return '$anneeDebut-${anneeDebut + 1}';
 }
 
 String _dateTexte(DateTime date) {
@@ -263,41 +208,24 @@ class _PageStatistiques extends StatelessWidget {
     required this.resultats,
     required this.anneeSelectionnee,
     required this.onAnneeChangee,
+    required this.repository,
   });
 
-  final List<_ResultatCandidat> resultats;
+  final List<ResultatCandidat> resultats;
   final String anneeSelectionnee;
   final ValueChanged<String> onAnneeChangee;
-
-  List<_ResultatCandidat> get resultatsFiltres {
-    final liste = <_ResultatCandidat>[];
-    for (final resultat in resultats) {
-      if (anneeSelectionnee == 'Toutes' ||
-          _anneeScolaire(resultat.date) == anneeSelectionnee) {
-        liste.add(resultat);
-      }
-    }
-    return liste;
-  }
+  final TableauDeBordRepository repository;
 
   @override
   Widget build(BuildContext context) {
-    final matieres = <String>[];
-    for (final resultat in resultatsFiltres) {
-      if (!matieres.contains(resultat.matiere)) {
-        matieres.add(resultat.matiere);
-      }
-    }
-
-    var nombreDeReussites = 0;
-    for (final resultat in resultatsFiltres) {
-      if (_aReussi(resultat)) {
-        nombreDeReussites++;
-      }
-    }
-    final tauxGeneral = resultatsFiltres.isEmpty
-        ? 0
-        : (nombreDeReussites * 100 / resultatsFiltres.length).round();
+    final resultatsFiltres = repository.filtrerResultats(
+      resultats,
+      '',
+      anneeSelectionnee,
+    );
+    final matieres = repository.getMatieres(resultatsFiltres);
+    final nombreDeReussites = repository.compterReussites(resultatsFiltres);
+    final tauxGeneral = repository.calculerTauxReussite(resultatsFiltres);
 
     return ListView(
       key: const ValueKey('statisticsList'),
@@ -329,7 +257,8 @@ class _PageStatistiques extends StatelessWidget {
         if (matieres.isEmpty)
           const Text('Aucun résultat pour cette année scolaire.')
         else
-          for (final matiere in matieres) _statistiqueMatiere(matiere),
+          for (final matiere in matieres)
+            _statistiqueMatiere(matiere, resultatsFiltres),
         const SizedBox(height: 16),
         const Text(
           'Réussite générale',
@@ -349,35 +278,24 @@ class _PageStatistiques extends StatelessWidget {
     );
   }
 
-  Widget _statistiqueMatiere(String matiere) {
-    var total = 0;
-    var reussites = 0;
-
-    for (final resultat in resultatsFiltres) {
-      if (resultat.matiere == matiere) {
-        total++;
-        if (_aReussi(resultat)) {
-          reussites++;
-        }
-      }
-    }
-
-    final taux = total == 0 ? 0 : (reussites * 100 / total).round();
+  Widget _statistiqueMatiere(
+    String matiere,
+    List<ResultatCandidat> resultatsFiltres,
+  ) {
+    final resultatsMatiere = repository.filtrerParMatiere(
+      resultatsFiltres,
+      matiere,
+    );
+    final reussites = repository.compterReussites(resultatsMatiere);
+    final taux = repository.calculerTauxReussite(resultatsMatiere);
 
     return _PourcentageMatiere(
       nom: matiere,
       pourcentage: taux,
       nombreDeReussites: reussites,
-      nombreDeResultats: total,
+      nombreDeResultats: resultatsMatiere.length,
     );
   }
-}
-
-bool _aReussi(_ResultatCandidat resultat) {
-  if (resultat.totalQuestions == 0) {
-    return false;
-  }
-  return resultat.score * 2 >= resultat.totalQuestions;
 }
 
 class _PourcentageMatiere extends StatelessWidget {
