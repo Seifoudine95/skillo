@@ -1,7 +1,63 @@
 import 'package:material_ui/material_ui.dart';
 
-class TableauDeBordAdmin extends StatelessWidget {
+class TableauDeBordAdmin extends StatefulWidget {
   const TableauDeBordAdmin({super.key});
+
+  @override
+  State<TableauDeBordAdmin> createState() => _TableauDeBordAdminState();
+}
+
+class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
+  final List<_ResultatCandidat> resultats = [
+    _ResultatCandidat(
+      prenom: 'Amina',
+      nom: 'Diallo',
+      matiere: 'HTML / CSS',
+      score: 8,
+      totalQuestions: 10,
+      date: DateTime(2026, 11, 20),
+    ),
+    _ResultatCandidat(
+      prenom: 'Yanis',
+      nom: 'Morel',
+      matiere: 'Java',
+      score: 4,
+      totalQuestions: 10,
+      date: DateTime(2026, 11, 18),
+    ),
+    _ResultatCandidat(
+      prenom: 'Camille',
+      nom: 'Bernard',
+      matiere: 'Algorithmique',
+      score: 9,
+      totalQuestions: 10,
+      date: DateTime(2026, 4, 8),
+    ),
+  ];
+
+  String recherche = '';
+  String anneeSelectionnee = 'Toutes';
+
+  List<_ResultatCandidat> get resultatsFiltres {
+    final liste = <_ResultatCandidat>[];
+
+    for (final resultat in resultats) {
+      final nomComplet = '${resultat.prenom} ${resultat.nom}'.toLowerCase();
+      final correspondAlaRecherche = nomComplet.contains(
+        recherche.toLowerCase(),
+      );
+      final correspondAlaAnnee =
+          anneeSelectionnee == 'Toutes' ||
+          _anneeScolaire(resultat.date) == anneeSelectionnee;
+
+      if (correspondAlaRecherche && correspondAlaAnnee) {
+        liste.add(resultat);
+      }
+    }
+
+    liste.sort((a, b) => b.date.compareTo(a.date));
+    return liste;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +73,7 @@ class TableauDeBordAdmin extends StatelessWidget {
             ],
           ),
         ),
-        body: const Column(
+        body: Column(
           children: [
             Padding(
               padding: EdgeInsets.all(12),
@@ -28,7 +84,23 @@ class TableauDeBordAdmin extends StatelessWidget {
             ),
             Expanded(
               child: TabBarView(
-                children: [_PageTableauDeBord(), _PageStatistiques()],
+                children: [
+                  _PageTableauDeBord(
+                    resultats: resultatsFiltres,
+                    anneeSelectionnee: anneeSelectionnee,
+                    onRechercheChangee: (value) {
+                      setState(() {
+                        recherche = value;
+                      });
+                    },
+                    onAnneeChangee: (value) {
+                      setState(() {
+                        anneeSelectionnee = value;
+                      });
+                    },
+                  ),
+                  const _PageStatistiques(),
+                ],
               ),
             ),
           ],
@@ -39,7 +111,17 @@ class TableauDeBordAdmin extends StatelessWidget {
 }
 
 class _PageTableauDeBord extends StatelessWidget {
-  const _PageTableauDeBord();
+  const _PageTableauDeBord({
+    required this.resultats,
+    required this.anneeSelectionnee,
+    required this.onRechercheChangee,
+    required this.onAnneeChangee,
+  });
+
+  final List<_ResultatCandidat> resultats;
+  final String anneeSelectionnee;
+  final ValueChanged<String> onRechercheChangee;
+  final ValueChanged<String> onAnneeChangee;
 
   @override
   Widget build(BuildContext context) {
@@ -51,16 +133,17 @@ class _PageTableauDeBord extends StatelessWidget {
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        const TextField(
+        TextField(
           decoration: InputDecoration(
             labelText: 'Rechercher par nom ou prénom',
             prefixIcon: Icon(Icons.search),
             border: OutlineInputBorder(),
           ),
+          onChanged: onRechercheChangee,
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: 'Toutes',
+          value: anneeSelectionnee,
           decoration: const InputDecoration(
             labelText: 'Année scolaire',
             border: OutlineInputBorder(),
@@ -70,36 +153,61 @@ class _PageTableauDeBord extends StatelessWidget {
             DropdownMenuItem(value: '2025-2026', child: Text('2025-2026')),
             DropdownMenuItem(value: '2026-2027', child: Text('2026-2027')),
           ],
-          onChanged: null,
+          onChanged: (value) {
+            if (value != null) {
+              onAnneeChangee(value);
+            }
+          },
         ),
         const SizedBox(height: 12),
-        const Card(
-          child: ListTile(
-            leading: Icon(Icons.person),
-            title: Text('Amina Diallo'),
-            subtitle: Text('HTML / CSS · 8/10\n20/11/2026 · 2026-2027'),
-            isThreeLine: true,
-          ),
-        ),
-        const Card(
-          child: ListTile(
-            leading: Icon(Icons.person),
-            title: Text('Yanis Morel'),
-            subtitle: Text('Java · 4/10\n18/11/2026 · 2026-2027'),
-            isThreeLine: true,
-          ),
-        ),
-        const Card(
-          child: ListTile(
-            leading: Icon(Icons.person),
-            title: Text('Camille Bernard'),
-            subtitle: Text('Algorithmique · 9/10\n08/04/2026 · 2025-2026'),
-            isThreeLine: true,
-          ),
-        ),
+        if (resultats.isEmpty)
+          const Text('Aucun résultat trouvé.')
+        else
+          for (final resultat in resultats)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.person),
+                title: Text('${resultat.prenom} ${resultat.nom}'),
+                subtitle: Text(
+                  '${resultat.matiere} · ${resultat.score}/${resultat.totalQuestions}'
+                  '\n${_dateTexte(resultat.date)} · '
+                  '${_anneeScolaire(resultat.date)}',
+                ),
+                isThreeLine: true,
+              ),
+            ),
       ],
     );
   }
+}
+
+class _ResultatCandidat {
+  const _ResultatCandidat({
+    required this.prenom,
+    required this.nom,
+    required this.matiere,
+    required this.score,
+    required this.totalQuestions,
+    required this.date,
+  });
+
+  final String prenom;
+  final String nom;
+  final String matiere;
+  final int score;
+  final int totalQuestions;
+  final DateTime date;
+}
+
+String _anneeScolaire(DateTime date) {
+  final anneeDebut = date.month >= 9 ? date.year : date.year - 1;
+  return '$anneeDebut-${anneeDebut + 1}';
+}
+
+String _dateTexte(DateTime date) {
+  final jour = date.day.toString().padLeft(2, '0');
+  final mois = date.month.toString().padLeft(2, '0');
+  return '$jour/$mois/${date.year}';
 }
 
 class _PageStatistiques extends StatelessWidget {
