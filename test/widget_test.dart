@@ -1,30 +1,32 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-
-import 'package:skillo/main.dart';
+import 'package:skillo/views/admin/tableau_de_bord_admin.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('dashboard page shows sample results and filters', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Résultats récents'), findsOneWidget);
+    expect(find.text('Amina Diallo'), findsOneWidget);
+    expect(find.text('Yanis Morel'), findsOneWidget);
+    expect(find.text('Rechercher par nom ou prénom'), findsOneWidget);
+    expect(find.text('Année scolaire'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('statistics page shows subject and overall indicators', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.tap(find.text('Statistiques'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Réussite par matière'), findsOneWidget);
+    expect(find.text('HTML / CSS'), findsOneWidget);
+    expect(find.text('Java'), findsOneWidget);
+    expect(find.text('Algorithmique'), findsOneWidget);
+    expect(find.text('Réussite générale'), findsOneWidget);
+    expect(find.text('72 % de réussite'), findsOneWidget);
   });
 }
