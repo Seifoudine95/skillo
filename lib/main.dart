@@ -1,14 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:skillo/views/utilisateur/connexion.dart';
-import 'package:skillo/views/utilisateur/inscription.dart';
+import 'package:skillo/firebase_options.dart';
+import 'package:skillo/views/utilisateur/accueil.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(ProviderScope(child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   // This widget is the root of your application.
   @override
@@ -17,7 +21,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const Inscription(),
+      home: Accueil(),
     );
   }
 }
+
