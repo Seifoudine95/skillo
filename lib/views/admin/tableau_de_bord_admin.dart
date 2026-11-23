@@ -99,7 +99,15 @@ class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
                       });
                     },
                   ),
-                  const _PageStatistiques(),
+                  _PageStatistiques(
+                    resultats: resultats,
+                    anneeSelectionnee: anneeSelectionnee,
+                    onAnneeChangee: (value) {
+                      setState(() {
+                        anneeSelectionnee = value;
+                      });
+                    },
+                  ),
                 ],
               ),
             ),
@@ -211,10 +219,46 @@ String _dateTexte(DateTime date) {
 }
 
 class _PageStatistiques extends StatelessWidget {
-  const _PageStatistiques();
+  const _PageStatistiques({
+    required this.resultats,
+    required this.anneeSelectionnee,
+    required this.onAnneeChangee,
+  });
+
+  final List<_ResultatCandidat> resultats;
+  final String anneeSelectionnee;
+  final ValueChanged<String> onAnneeChangee;
+
+  List<_ResultatCandidat> get resultatsFiltres {
+    final liste = <_ResultatCandidat>[];
+    for (final resultat in resultats) {
+      if (anneeSelectionnee == 'Toutes' ||
+          _anneeScolaire(resultat.date) == anneeSelectionnee) {
+        liste.add(resultat);
+      }
+    }
+    return liste;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final matieres = <String>[];
+    for (final resultat in resultatsFiltres) {
+      if (!matieres.contains(resultat.matiere)) {
+        matieres.add(resultat.matiere);
+      }
+    }
+
+    var nombreDeReussites = 0;
+    for (final resultat in resultatsFiltres) {
+      if (_aReussi(resultat)) {
+        nombreDeReussites++;
+      }
+    }
+    final tauxGeneral = resultatsFiltres.isEmpty
+        ? 0
+        : (nombreDeReussites * 100 / resultatsFiltres.length).round();
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -224,43 +268,89 @@ class _PageStatistiques extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
-          value: '2026-2027',
+          value: anneeSelectionnee,
           decoration: const InputDecoration(
             labelText: 'Année scolaire',
             border: OutlineInputBorder(),
           ),
           items: const [
+            DropdownMenuItem(value: 'Toutes', child: Text('Toutes')),
             DropdownMenuItem(value: '2025-2026', child: Text('2025-2026')),
             DropdownMenuItem(value: '2026-2027', child: Text('2026-2027')),
           ],
-          onChanged: null,
+          onChanged: (value) {
+            if (value != null) {
+              onAnneeChangee(value);
+            }
+          },
         ),
         const SizedBox(height: 12),
-        const _PourcentageMatiere(nom: 'HTML / CSS', pourcentage: 80),
-        const _PourcentageMatiere(nom: 'Java', pourcentage: 60),
-        const _PourcentageMatiere(nom: 'Algorithmique', pourcentage: 75),
+        if (matieres.isEmpty)
+          const Text('Aucun résultat pour cette année scolaire.')
+        else
+          for (final matiere in matieres) _statistiqueMatiere(matiere),
         const SizedBox(height: 16),
         const Text(
           'Réussite générale',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        const Card(
+        Card(
           child: ListTile(
-            leading: _IndicateurPourcentage(pourcentage: 72),
-            title: Text('72 % de réussite'),
-            subtitle: Text('Pour tous les candidats de l’année sélectionnée'),
+            leading: _IndicateurPourcentage(pourcentage: tauxGeneral),
+            title: Text('$tauxGeneral % de réussite'),
+            subtitle: Text(
+              '$nombreDeReussites réussite(s) sur '
+              '${resultatsFiltres.length} résultat(s)',
+            ),
           ),
         ),
       ],
     );
   }
+
+  Widget _statistiqueMatiere(String matiere) {
+    var total = 0;
+    var reussites = 0;
+
+    for (final resultat in resultatsFiltres) {
+      if (resultat.matiere == matiere) {
+        total++;
+        if (_aReussi(resultat)) {
+          reussites++;
+        }
+      }
+    }
+
+    final taux = total == 0 ? 0 : (reussites * 100 / total).round();
+
+    return _PourcentageMatiere(
+      nom: matiere,
+      pourcentage: taux,
+      nombreDeReussites: reussites,
+      nombreDeResultats: total,
+    );
+  }
+}
+
+bool _aReussi(_ResultatCandidat resultat) {
+  if (resultat.totalQuestions == 0) {
+    return false;
+  }
+  return resultat.score * 2 >= resultat.totalQuestions;
 }
 
 class _PourcentageMatiere extends StatelessWidget {
-  const _PourcentageMatiere({required this.nom, required this.pourcentage});
+  const _PourcentageMatiere({
+    required this.nom,
+    required this.pourcentage,
+    required this.nombreDeReussites,
+    required this.nombreDeResultats,
+  });
 
   final String nom;
   final int pourcentage;
+  final int nombreDeReussites;
+  final int nombreDeResultats;
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +358,10 @@ class _PourcentageMatiere extends StatelessWidget {
       child: ListTile(
         leading: _IndicateurPourcentage(pourcentage: pourcentage),
         title: Text(nom),
-        subtitle: Text('$pourcentage % de réussite'),
+        subtitle: Text(
+          '$pourcentage % · $nombreDeReussites réussite(s) sur '
+          '$nombreDeResultats résultat(s)',
+        ),
       ),
     );
   }

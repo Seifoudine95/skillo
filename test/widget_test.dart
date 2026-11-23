@@ -48,7 +48,7 @@ void main() {
     expect(find.text('Yanis Morel'), findsNothing);
   });
 
-  testWidgets('statistics page shows subject and overall indicators', (
+  testWidgets('statistics page calculates success rates from results', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
@@ -60,6 +60,28 @@ void main() {
     expect(find.text('Java'), findsOneWidget);
     expect(find.text('Algorithmique'), findsOneWidget);
     expect(find.text('Réussite générale'), findsOneWidget);
-    expect(find.text('72 % de réussite'), findsOneWidget);
+    expect(find.text('67 % de réussite'), findsOneWidget);
+    expect(
+      find.text('100 % · 1 réussite(s) sur 1 résultat(s)'),
+      findsNWidgets(2),
+    );
+    expect(find.text('0 % · 0 réussite(s) sur 1 résultat(s)'), findsOneWidget);
+  });
+
+  testWidgets('statistics are filtered by school year', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
+    await tester.tap(find.text('Statistiques'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('2026-2027').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('50 % de réussite'), findsOneWidget);
+    expect(find.text('Algorithmique'), findsNothing);
+    expect(find.text('HTML / CSS'), findsOneWidget);
   });
 }
