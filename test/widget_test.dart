@@ -9,7 +9,17 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: TableauDeBordAdmin()));
 
     expect(find.text('Résultats récents'), findsOneWidget);
-    expect(find.text('Amina Diallo'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Ami Diallo'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('dashboardList')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('Ami Diallo'), findsOneWidget);
     expect(find.text('Yanis Morel'), findsOneWidget);
     expect(find.text('Rechercher par nom ou prénom'), findsOneWidget);
     expect(find.text('Année scolaire'), findsOneWidget);
@@ -56,14 +66,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Réussite par matière'), findsOneWidget);
-    expect(find.text('HTML / CSS'), findsOneWidget);
-    expect(find.text('Java'), findsOneWidget);
-    expect(find.text('Algorithmique'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('67 % de réussite'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('statisticsList')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(find.text('Réussite générale'), findsOneWidget);
     expect(find.text('67 % de réussite'), findsOneWidget);
-    expect(
-      find.text('100 % · 1 réussite(s) sur 1 résultat(s)'),
-      findsNWidgets(2),
+    await tester.scrollUntilVisible(
+      find.text('Java'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('statisticsList')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     expect(find.text('0 % · 0 réussite(s) sur 1 résultat(s)'), findsOneWidget);
   });

@@ -10,7 +10,7 @@ class TableauDeBordAdmin extends StatefulWidget {
 class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
   final List<_ResultatCandidat> resultats = [
     _ResultatCandidat(
-      prenom: 'Amina',
+      prenom: 'Ami',
       nom: 'Diallo',
       matiere: 'HTML / CSS',
       score: 8,
@@ -64,54 +64,89 @@ class _TableauDeBordAdminState extends State<TableauDeBordAdmin> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Administration'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Tableau de bord'),
-              Tab(text: 'Statistiques'),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Administration',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          CircleAvatar(
+                            backgroundColor: Colors.white,
+                            child: Icon(
+                              Icons.admin_panel_settings,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const TabBar(
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white70,
+                      indicatorColor: Colors.white,
+                      tabs: [
+                        Tab(text: 'Tableau de bord'),
+                        Tab(text: 'Statistiques'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _PageTableauDeBord(
+                      resultats: resultatsFiltres,
+                      anneeSelectionnee: anneeSelectionnee,
+                      onRechercheChangee: (value) {
+                        setState(() {
+                          recherche = value;
+                        });
+                      },
+                      onAnneeChangee: (value) {
+                        setState(() {
+                          anneeSelectionnee = value;
+                        });
+                      },
+                    ),
+                    _PageStatistiques(
+                      resultats: resultats,
+                      anneeSelectionnee: anneeSelectionnee,
+                      onAnneeChangee: (value) {
+                        setState(() {
+                          anneeSelectionnee = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(12),
-              child: Text(
-                'Maquette : ces informations sont des exemples et ne viennent '
-                'pas encore de Firebase.',
-              ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _PageTableauDeBord(
-                    resultats: resultatsFiltres,
-                    anneeSelectionnee: anneeSelectionnee,
-                    onRechercheChangee: (value) {
-                      setState(() {
-                        recherche = value;
-                      });
-                    },
-                    onAnneeChangee: (value) {
-                      setState(() {
-                        anneeSelectionnee = value;
-                      });
-                    },
-                  ),
-                  _PageStatistiques(
-                    resultats: resultats,
-                    anneeSelectionnee: anneeSelectionnee,
-                    onAnneeChangee: (value) {
-                      setState(() {
-                        anneeSelectionnee = value;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -134,6 +169,7 @@ class _PageTableauDeBord extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      key: const ValueKey('dashboardList'),
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
@@ -173,8 +209,12 @@ class _PageTableauDeBord extends StatelessWidget {
         else
           for (final resultat in resultats)
             Card(
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Colors.black12),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: ListTile(
-                leading: const Icon(Icons.person),
+                leading: const Icon(Icons.person, color: Colors.blue),
                 title: Text('${resultat.prenom} ${resultat.nom}'),
                 subtitle: Text(
                   '${resultat.matiere} · ${resultat.score}/${resultat.totalQuestions}'
@@ -260,6 +300,7 @@ class _PageStatistiques extends StatelessWidget {
         : (nombreDeReussites * 100 / resultatsFiltres.length).round();
 
     return ListView(
+      key: const ValueKey('statisticsList'),
       padding: const EdgeInsets.all(16),
       children: [
         const Text(
@@ -355,6 +396,10 @@ class _PourcentageMatiere extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: Colors.black12),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: ListTile(
         leading: _IndicateurPourcentage(pourcentage: pourcentage),
         title: Text(nom),
@@ -380,7 +425,10 @@ class _IndicateurPourcentage extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          CircularProgressIndicator(value: pourcentage / 100),
+          CircularProgressIndicator(
+            value: pourcentage / 100,
+            color: Colors.blue,
+          ),
           Text('$pourcentage'),
         ],
       ),
