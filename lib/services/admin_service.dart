@@ -9,34 +9,86 @@ import 'package:skillo/models/resultat_model.dart';
 
 class AdminService {
   // connexion de l'admin
- 
   Future<String> connexion(String email, String motDePasse) async {
     if (email == "" || motDePasse == "") {
       return "Remplis l'email et le mot de passe";
     }
+
+    UserCredential credential;
     try {
-      // 1. on vérifie l'email et le mot de passe
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
+      credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.trim(),
         password: motDePasse,
       );
+    } on FirebaseAuthException catch (error) {
+      return switch (error.code) {
+        "invalid-email" => "L'adresse e-mail n'est pas valide",
+        "user-not-found" || "wrong-password" || "invalid-credential" => "Compte Firebase Authentication introuvable ou mot de passe incorrect",
+        "network-request-failed" =>
+          "Connexion impossible : vérifie ta connexion Internet",
+        _ => "Échec de la connexion Firebase (${error.code})",
+      };
+    }
 
-      String uid = FirebaseAuth.instance.currentUser!.uid;
+    final emailAuthentifie = credential.user?.email?.trim().toLowerCase();
+    if (emailAuthentifie == null || emailAuthentifie.isEmpty) {
+      await FirebaseAuth.instance.signOut();
+      return "L'adresse e-mail du compte authentifié est introuvable";
+    }
 
-      // le compte doit être dans la collection "Admin"
-      DocumentSnapshot doc = await FirebaseFirestore.instance
-          .collection("Admin")
-          .doc(uid)
+    try {
+      final utilisateursParEmail = await FirebaseFirestore.instance
+          .collection("User")
+          .where("e-mail", isEqualTo: emailAuthentifie)
           .get();
 
-      if (doc.exists == false) {
+      final utilisateursParChampHistorique = utilisateursParEmail.docs.isEmpty
+          ? await FirebaseFirestore.instance
+                .collection("User")
+                .where("email", isEqualTo: emailAuthentifie)
+                .get()
+          : null;
+
+      final utilisateurs =
+          utilisateursParChampHistorique?.docs ?? utilisateursParEmail.docs;
+      if (utilisateurs.isEmpty) {
         await FirebaseAuth.instance.signOut();
-        return "Ce compte n'est pas administrateur";
+        return "Connecté avec $emailAuthentifie, mais aucun document "
+            "User ne correspond à cette adresse dans e-mail/email.";
+      }
+
+      QueryDocumentSnapshot<Map<String, dynamic>>? documentAdministrateur;
+      for (final document in utilisateurs) {
+        final data = document.data();
+        final emailDocument = (data["email"] ?? data["e-mail"] ?? "")
+            .toString()
+            .trim()
+            .toLowerCase();
+        if (emailDocument == emailAuthentifie) {
+          documentAdministrateur = document;
+          break;
+        }
+      }
+
+      if (documentAdministrateur == null) {
+        await FirebaseAuth.instance.signOut();
+        return "Connecté avec $emailAuthentifie, mais aucun document "
+            "User ne correspond exactement à cette adresse.";
+      }
+
+      final role = documentAdministrateur.data()["admin"];
+      if (role != true) {
+        await FirebaseAuth.instance.signOut();
+        final typeRole = role == null ? "absent" : role.runtimeType.toString();
+        return "Le document User est trouvé, mais admin "
+            "n'est pas le booléen true (type actuel : $typeRole).";
       }
 
       return "";
-    } catch (e) {
-      return "Email ou mot de passe incorrect";
+    } on FirebaseException catch (error) {
+      await FirebaseAuth.instance.signOut();
+      return "Erreur lors de la vérification des droits : "
+          "${error.message ?? error.code}";
     }
   }
 

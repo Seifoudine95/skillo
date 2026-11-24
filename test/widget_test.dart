@@ -4,9 +4,24 @@ import 'package:material_ui/material_ui.dart';
 import 'package:skillo/models/resultat_candidat_model.dart';
 import 'package:skillo/providers/providers.dart';
 import 'package:skillo/repository/tableau_de_bord_repository.dart';
+import 'package:skillo/views/admin/connexion_admin.dart';
 import 'package:skillo/views/admin/tableau_de_bord_admin.dart';
+import 'package:skillo/views/utilisateur/connexion.dart';
 
 void main() {
+  testWidgets('admin entry opens the admin sign-in screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: Connexion()));
+
+    await tester.tap(find.text('Espace administrateur'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ConnexionAdmin), findsOneWidget);
+    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Mot de passe'), findsOneWidget);
+  });
+
   testWidgets('dashboard shows results in date order', (
     WidgetTester tester,
   ) async {
