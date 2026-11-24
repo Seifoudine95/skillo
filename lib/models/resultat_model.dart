@@ -23,7 +23,7 @@ class Resultat {
     final data = doc.data() as Map<String, dynamic>;
     return Resultat(
       id: doc.id,
-      userId: data["ID de l'utilisateur"] ?? data['userId'] ?? '',
+      userId: data['userId'] ?? data["ID de l'utilisateur"] ?? '',
       matiereId: data['matiereId'] ?? '',
       matiere: data['matiere'] ?? '',
       score: data['score'] ?? 0,
@@ -33,7 +33,7 @@ class Resultat {
   }
   Map<String, dynamic> toJson() {
     return {
-      "ID de l'utilisateur": userId,
+      'userId': userId,
       'matiereId': matiereId,
       'matiere': matiere,
       'score': score,
