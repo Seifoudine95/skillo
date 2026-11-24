@@ -1,27 +1,28 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skillo/firebase_options.dart';
-import 'package:skillo/views/utilisateur/accueil.dart';
+import 'package:skillo/views/utilisateur/connexion.dart';
 
-Future<void> main() async {
+void main() async {
+  // obligatoire avant d'utiliser Firebase
   WidgetsFlutterBinding.ensureInitialized();
+
+  // on connecte l'appli au projet Firebase (infos dans firebase_options.dart)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(ProviderScope(child: const MyApp()));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: Accueil(),
+      title: "Skillo",
+      // story I : on arrive d'abord sur la page de connexion
+      home: Connexion(),
     );
   }
 }

@@ -40,6 +40,7 @@ class Resultat {
       'matiere': matiere,
       'score': score,
       'totalQuestions': totalQuestions,
+      'datePassage': datePassage,
     };
   }
 }
