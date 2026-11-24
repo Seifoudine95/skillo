@@ -1,8 +1,9 @@
-import 'package:email_validator/email_validator.dart';
+// VUE : inscription du candidat story I
+// logique = candidat_service.dart
+
 import 'package:material_ui/material_ui.dart';
-import 'package:skillo/repository/user_repository.dart';
+import 'package:skillo/services/candidat_service.dart';
 import 'package:skillo/views/utilisateur/accueil.dart';
-import 'package:skillo/views/utilisateur/connexion.dart';
 
 class Inscription extends StatefulWidget {
   const Inscription({super.key});
@@ -12,192 +13,137 @@ class Inscription extends StatefulWidget {
 }
 
 class _InscriptionState extends State<Inscription> {
-  final _formKey = GlobalKey<FormState>();
+  CandidatService service = CandidatService();
 
-  final TextEditingController _nom = TextEditingController();
+  TextEditingController nomController = TextEditingController();
+  TextEditingController prenomController = TextEditingController();
+  TextEditingController mailController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
+  TextEditingController adresseController = TextEditingController();
 
-  final TextEditingController _prenom = TextEditingController();
+  String? motivation; //  rien n'est choisi
+  String message = "";
 
-  final TextEditingController _mail = TextEditingController();
+  // clique sur "S'inscrire"
+  Future<void> sInscrire() async {
+    String resultat = await service.inscrire(
+      nomController.text.trim(),
+      prenomController.text.trim(),
+      mailController.text.trim(),
+      ageController.text.trim(),
+      adresseController.text.trim(),
+      motivation,
+    );
 
-  final TextEditingController _age = TextEditingController();
+    if (!mounted) {
+      return;
+    }
 
-  final TextEditingController _adressePostal = TextEditingController();
-
-  final List<String> _motivations = [
-    "Poursuite d'étude",
-    "Reconversion pro",
-    "Réorientation",
-  ];
-
-  String? _motivation;
+    if (resultat == "") {
+      // inscription réussie 
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Accueil()),
+        (route) => false,
+      );
+    } else {
+      setState(() {
+        message = resultat;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // appBar: AppBar(title: Text('Inscription')),
-      body: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: MediaQuery.sizeOf(context).width * 0.3,
+    // crée la liste des  motivations
+    List<DropdownMenuItem<String>> choix = [];
+    for (int i = 0; i < service.motivations.length; i++) {
+      choix.add(
+        DropdownMenuItem(
+          value: service.motivations[i],
+          child: Text(service.motivations[i]),
         ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 40),
-                Text(
-                  'INSCRIPTION',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-                SizedBox(height: 20),
-                TextFormField(
-                  controller: _nom,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: 'Nom',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veillez entrer votre Nom';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFormField(
-                  controller: _prenom,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: 'Prénom',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veillez entrer votre Prénom';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFormField(
-                  controller: _mail,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: 'Mail',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veillez entrer votre Mail';
-                    }
-                    if (!EmailValidator.validate(value.trim())) {
-                      return 'Veillez entrer une dresse mail invalide';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFormField(
-                  keyboardType: TextInputType.number,
-                  controller: _age,
-                  decoration: InputDecoration(
-                    labelText: 'Age',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veillez entrer votre Age';
-                    }
-                    final number = int.tryParse(value);
-                    if (number == null) {
-                      return 'Veuillez entrer un nombre';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
-                TextFormField(
-                  controller: _adressePostal,
-                  keyboardType: TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: 'Adresse Postal',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 10),
+      );
+    }
 
-                DropdownButtonFormField<String>(
-                  initialValue: _motivation,
-                  decoration: const InputDecoration(
-                    labelText: 'Sélectionnez votre motivation',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _motivations.map((String motivation) {
-                    return DropdownMenuItem<String>(
-                      value: motivation,
-                      child: Text(motivation),
-                    );
-                  }).toList(),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _motivation = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez choisir votre motivation';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      UserRepository().addUser(
-                        _nom.text,
-                        _prenom.text,
-                        _mail.text,
-                        _age.text,
-                        _adressePostal.text,
-                        _motivation!,
-                      );
-                      _nom.text = "";
-                      _prenom.text = "";
-                      _mail.text = "";
-                      _age.text = "";
-                      _adressePostal.text = "";
-                      _motivation != "";
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => Accueil()),
-                      );
-                    }
-                  },
-                  child: Text('S\'inscrire'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Connexion()),
-                    );
-                  },
-                  child: Text('Déjà un compte ? Se connecter'),
-                ),
-              ],
+    return Scaffold(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Text(
+              "INSCRIPTION",
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
             ),
-          ),
+            SizedBox(height: 20),
+            TextField(
+              controller: nomController,
+              decoration: InputDecoration(
+                labelText: "Nom",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: prenomController,
+              decoration: InputDecoration(
+                labelText: "Prénom",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: mailController,
+              decoration: InputDecoration(
+                labelText: "Mail",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: ageController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: "Âge",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: adresseController,
+              decoration: InputDecoration(
+                labelText: "Adresse postale",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 10),
+            DropdownButton<String>(
+              value: motivation,
+              hint: Text("Choisis ta motivation"),
+              isExpanded: true,
+              items: choix,
+              onChanged: (valeur) {
+                setState(() {
+                  motivation = valeur;
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                sInscrire();
+              },
+              child: Text("S'inscrire"),
+            ),
+            SizedBox(height: 10),
+            Text(message, style: TextStyle(color: Colors.red)),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Déjà un compte ? Se connecter"),
+            ),
+          ],
         ),
       ),
     );
