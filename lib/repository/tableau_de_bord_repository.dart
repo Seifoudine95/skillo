@@ -11,9 +11,9 @@ class TableauDeBordRepository {
 
   FirebaseFirestore get _database => _firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference get _resultats => _database.collection('Resultat');
+  CollectionReference get _resultats => _database.collection('Résultat');
 
-  CollectionReference get _utilisateurs => _database.collection('User');
+  CollectionReference get _utilisateurs => _database.collection('Utilisateur');
 
   Stream<List<ResultatCandidat>> getResultats() {
     return _resultats.snapshots().asyncMap((snapshot) async {
