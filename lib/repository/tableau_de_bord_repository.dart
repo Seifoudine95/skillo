@@ -21,17 +21,24 @@ class TableauDeBordRepository {
 
       for (final document in snapshot.docs) {
         final resultat = Resultat.fromFirestore(document);
-        final utilisateurDocument = await _utilisateurs
-            .doc(resultat.userId)
-            .get();
-        final utilisateur = utilisateurDocument.exists
-            ? User.fromFirestore(utilisateurDocument)
-            : null;
+        User? utilisateur;
+        if (resultat.userId.isNotEmpty) {
+          final utilisateurDocument = await _utilisateurs
+              .doc(resultat.userId)
+              .get();
+          if (utilisateurDocument.exists) {
+            utilisateur = User.fromFirestore(utilisateurDocument);
+          }
+        }
 
         resultats.add(
           ResultatCandidat(
             prenom: utilisateur?.prenom ?? '',
-            nom: utilisateur?.nom ?? resultat.userId,
+            nom:
+                utilisateur?.nom ??
+                (resultat.userId.isEmpty
+                    ? 'Utilisateur inconnu'
+                    : resultat.userId),
             matiere: resultat.matiere,
             score: resultat.score,
             totalQuestions: resultat.totalQuestions,
