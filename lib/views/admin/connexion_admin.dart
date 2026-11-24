@@ -1,4 +1,4 @@
-// VUE : story IV connexion de l'administrateur 
+// VUE : story IV connexion de l'administrateur
 // la logique deadmin_service.dart
 
 import 'package:material_ui/material_ui.dart';
@@ -43,6 +43,13 @@ class _ConnexionAdminState extends State<ConnexionAdmin> {
   }
 
   @override
+  void dispose() {
+    emailController.dispose();
+    mdpController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Espace administrateur")),
@@ -65,7 +72,7 @@ class _ConnexionAdminState extends State<ConnexionAdmin> {
             SizedBox(height: 10),
             TextField(
               controller: mdpController,
-              obscureText: true, // cache le mot de passe avec des points
+              obscureText: true,
               decoration: InputDecoration(
                 labelText: "Mot de passe",
                 border: OutlineInputBorder(),

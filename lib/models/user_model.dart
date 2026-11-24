@@ -24,11 +24,22 @@ class User {
     return User(
       id: doc.id,
       nom: data['nom'] ?? '',
-      prenom: data['prenom'] ?? '',
-      email: data['email'] ?? '',
-      age: data['age'] ?? '',
-      adressePostal: data['adressePostal'] ?? '',
+      prenom: data['prenom'] ?? data['prénom'] ?? '',
+      email: data['email'] ?? data['e-mail'] ?? '',
+      age: '${data['age'] ?? data['âge'] ?? ''}',
+      adressePostal: data['adressePostal'] ?? data['adresse postale'] ?? '',
       motivation: data['motivation'] ?? '',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'nom': nom,
+      'prenom': prenom,
+      'email': email,
+      'age': age,
+      'adressePostal': adressePostal,
+      'motivation': motivation,
+    };
   }
 }

@@ -7,7 +7,7 @@ import 'package:skillo/models/matiere_model.dart';
 import 'package:skillo/services/admin_service.dart';
 import 'package:skillo/views/admin/ajouter_matiere.dart';
 import 'package:skillo/views/admin/gestion_questions.dart';
-import 'package:skillo/views/admin/resultats_admin.dart';
+import 'package:skillo/views/admin/tableau_de_bord_admin.dart';
 import 'package:skillo/views/utilisateur/connexion.dart';
 
 class AcueilAdmin extends StatefulWidget {
@@ -74,7 +74,9 @@ class _AcueilAdminState extends State<AcueilAdmin> {
     if (chargement == true) {
       contenu = Center(child: CircularProgressIndicator());
     } else if (matieres.isEmpty) {
-      contenu = Center(child: Text("Aucune matière. Clique sur + pour en ajouter une."));
+      contenu = Center(
+        child: Text("Aucune matière. Clique sur + pour en ajouter une."),
+      );
     } else {
       // une ligne par matière
       List<Widget> lignes = [];
@@ -88,7 +90,7 @@ class _AcueilAdminState extends State<AcueilAdmin> {
               subtitle: Text(matieres[i].description),
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
-                // STORY V : gérer les questions 
+                // STORY V : gérer les questions
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -113,7 +115,7 @@ class _AcueilAdminState extends State<AcueilAdmin> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ResultatsAdmin()),
+                MaterialPageRoute(builder: (context) => TableauDeBordAdmin()),
               );
             },
           ),

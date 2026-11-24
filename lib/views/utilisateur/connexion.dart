@@ -3,7 +3,7 @@
 
 import 'package:material_ui/material_ui.dart';
 import 'package:skillo/services/candidat_service.dart';
-import 'package:skillo/views/admin/acueil_admin.dart'; // TEST
+import 'package:skillo/views/admin/connexion_admin.dart';
 import 'package:skillo/views/utilisateur/accueil.dart';
 import 'package:skillo/views/utilisateur/inscription.dart';
 
@@ -96,9 +96,7 @@ class _ConnexionState extends State<Connexion> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  // Test va directement à l'accueil admin sans connexion
-                  // remettre après : ConnexionAdmin()
-                  MaterialPageRoute(builder: (context) => AcueilAdmin()),
+                  MaterialPageRoute(builder: (context) => ConnexionAdmin()),
                 );
               },
               child: Text("Espace administrateur"),
