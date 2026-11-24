@@ -111,6 +111,32 @@ void main() {
     expect(find.text('Algorithmique'), findsNothing);
     expect(find.text('HTML / CSS'), findsOneWidget);
   });
+
+  testWidgets('statistics display pie charts for subjects and overall rate', (
+    WidgetTester tester,
+  ) async {
+    await _pumpDashboard(tester);
+    await tester.tap(find.text('Statistiques'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réussite'), findsOneWidget);
+    expect(find.text('Échec'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('camembert-visuel-HTML / CSS')),
+      findsOneWidget,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Réussite générale'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const ValueKey('statisticsList')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.byKey(const ValueKey('tauxGeneralCamembert')), findsOneWidget);
+  });
 }
 
 Future<void> _pumpDashboard(WidgetTester tester) async {

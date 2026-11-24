@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skillo/models/resultat_candidat_model.dart';
@@ -24,9 +26,8 @@ class _TableauDeBordAdminState extends ConsumerState<TableauDeBordAdmin> {
       error: (error, stackTrace) => Scaffold(
         body: Center(child: Text('Erreur lors du chargement : $error')),
       ),
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       data: (donnees) {
         final resultatsFiltres = repository.filtrerResultats(
           donnees,
@@ -269,6 +270,8 @@ class _PageStatistiques extends StatelessWidget {
           },
         ),
         const SizedBox(height: 12),
+        const _LegendeCamembert(),
+        const SizedBox(height: 8),
         if (matieres.isEmpty)
           const Text('Aucun résultat pour cette année scolaire.')
         else
@@ -281,7 +284,10 @@ class _PageStatistiques extends StatelessWidget {
         ),
         Card(
           child: ListTile(
-            leading: _IndicateurPourcentage(pourcentage: tauxGeneral),
+            leading: _CamembertReussite(
+              pourcentage: tauxGeneral,
+              key: const ValueKey('tauxGeneralCamembert'),
+            ),
             title: Text('$tauxGeneral % de réussite'),
             subtitle: Text(
               '$nombreDeReussites réussite(s) sur '
@@ -309,12 +315,60 @@ class _PageStatistiques extends StatelessWidget {
       pourcentage: taux,
       nombreDeReussites: reussites,
       nombreDeResultats: resultatsMatiere.length,
+      key: ValueKey('camembert-$matiere'),
+    );
+  }
+}
+
+class _LegendeCamembert extends StatelessWidget {
+  const _LegendeCamembert();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        _ElementLegendeCamembert(
+          couleur: Colors.blue,
+          texte: 'Réussite',
+        ),
+        SizedBox(width: 16),
+        _ElementLegendeCamembert(
+          couleur: Colors.black12,
+          texte: 'Échec',
+        ),
+      ],
+    );
+  }
+}
+
+class _ElementLegendeCamembert extends StatelessWidget {
+  const _ElementLegendeCamembert({
+    required this.couleur,
+    required this.texte,
+  });
+
+  final Color couleur;
+  final String texte;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: couleur, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(texte),
+      ],
     );
   }
 }
 
 class _PourcentageMatiere extends StatelessWidget {
   const _PourcentageMatiere({
+    super.key,
     required this.nom,
     required this.pourcentage,
     required this.nombreDeReussites,
@@ -334,7 +388,10 @@ class _PourcentageMatiere extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
-        leading: _IndicateurPourcentage(pourcentage: pourcentage),
+        leading: _CamembertReussite(
+          pourcentage: pourcentage,
+          key: ValueKey('camembert-visuel-$nom'),
+        ),
         title: Text(nom),
         subtitle: Text(
           '$pourcentage % · $nombreDeReussites réussite(s) sur '
@@ -345,26 +402,60 @@ class _PourcentageMatiere extends StatelessWidget {
   }
 }
 
-class _IndicateurPourcentage extends StatelessWidget {
-  const _IndicateurPourcentage({required this.pourcentage});
+class _CamembertReussite extends StatelessWidget {
+  const _CamembertReussite({super.key, required this.pourcentage});
 
   final int pourcentage;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 48,
-      height: 48,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: pourcentage / 100,
-            color: Colors.blue,
-          ),
-          Text('$pourcentage'),
-        ],
+    return Semantics(
+      label: 'Camembert de réussite : $pourcentage %',
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: CustomPaint(
+          painter: _CamembertPainter(pourcentage: pourcentage),
+        ),
       ),
     );
+  }
+}
+
+class _CamembertPainter extends CustomPainter {
+  const _CamembertPainter({required this.pourcentage});
+
+  final int pourcentage;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    final centre = Offset(size.width / 2, size.height / 2);
+    final rayon = math.min(size.width, size.height) / 2;
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    if (pourcentage <= 0) {
+      paint.color = Colors.black12;
+      canvas.drawCircle(centre, rayon, paint);
+      return;
+    }
+
+    if (pourcentage >= 100) {
+      paint.color = Colors.blue;
+      canvas.drawCircle(centre, rayon, paint);
+      return;
+    }
+
+    paint.color = Colors.black12;
+    canvas.drawCircle(centre, rayon, paint);
+
+    paint.color = Colors.blue;
+    final angleReussite = 2 * math.pi * pourcentage / 100;
+    canvas.drawArc(bounds, -math.pi / 2, angleReussite, true, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CamembertPainter oldDelegate) {
+    return oldDelegate.pourcentage != pourcentage;
   }
 }
