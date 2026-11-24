@@ -74,7 +74,9 @@ class _AcueilAdminState extends State<AcueilAdmin> {
     if (chargement == true) {
       contenu = Center(child: CircularProgressIndicator());
     } else if (matieres.isEmpty) {
-      contenu = Center(child: Text("Aucune matière. Clique sur + pour en ajouter une."));
+      contenu = Center(
+        child: Text("Aucune matière. Clique sur + pour en ajouter une."),
+      );
     } else {
       // une ligne par matière
       List<Widget> lignes = [];
@@ -88,7 +90,7 @@ class _AcueilAdminState extends State<AcueilAdmin> {
               subtitle: Text(matieres[i].description),
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
-                // STORY V : gérer les questions 
+                // STORY V : gérer les questions
                 Navigator.push(
                   context,
                   MaterialPageRoute(
