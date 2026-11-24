@@ -16,36 +16,32 @@ class QuestionQcmRepository {
     });
   }
 
-  Future<void> addQuestion(
-    String matiereId,
-    String question,
-    List<String> options,
-    String reponse,
-  ) async {
-    await _question.add({
-      'matiereId': matiereId,
-      'question': question,
-      'options': options,
-      'reponse': reponse,
-    });
+  Future<void> addQuestion(QuestionQcm question) async {
+    await _question.add(question.toJson());
   }
 
-  Future<void> updateQuestion(
-    String id,
-    String matiereId,
-    String question,
-    List<String> options,
-    String reponse,
-  ) async {
-    await _question.doc(id).update({
-      'matiereId': matiereId,
-      'question': question,
-      'options': options,
-      'reponse': reponse,
-    });
+  Future<void> updateQuestion(QuestionQcm question) async {
+    await _question.doc(question.id).update(question.toJson());
   }
 
   Future<void> deleteQuestion(String id) async {
     await _question.doc(id).delete();
+  }
+
+  // supprime toutes les questions de la matière et les remplace (import JSON)
+  Future<void> remplacerQuestions(
+    String matiere,
+    List<QuestionQcm> questions,
+  ) async {
+    final anciennes = await _question.where('matiere', isEqualTo: matiere).get();
+
+    final batch = FirebaseFirestore.instance.batch();
+    for (final doc in anciennes.docs) {
+      batch.delete(doc.reference);
+    }
+    for (final q in questions) {
+      batch.set(_question.doc(), q.toJson());
+    }
+    await batch.commit();
   }
 }
