@@ -13,5 +13,5 @@ class ResultatCandidat {
   final String matiere;
   final int score;
   final int totalQuestions;
-  final DateTime date;
+  final DateTime? date;
 }

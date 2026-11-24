@@ -18,103 +18,114 @@ class _TableauDeBordAdminState extends ConsumerState<TableauDeBordAdmin> {
   @override
   Widget build(BuildContext context) {
     final repository = ref.watch(tableauDeBordRepositoryProvider);
-    final resultats = repository.getResultats();
-    final resultatsFiltres = repository.filtrerResultats(
-      resultats,
-      recherche,
-      anneeSelectionnee,
-    );
+    final resultats = ref.watch(getResultatAdminProvider);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        body: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Administration',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.admin_panel_settings,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
+    return resultats.when(
+      error: (error, stackTrace) => Scaffold(
+        body: Center(child: Text('Erreur lors du chargement : $error')),
+      ),
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      data: (donnees) {
+        final resultatsFiltres = repository.filtrerResultats(
+          donnees,
+          recherche,
+          anneeSelectionnee,
+        );
+
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
                       ),
                     ),
-                    const TabBar(
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white70,
-                      indicatorColor: Colors.white,
-                      tabs: [
-                        Tab(text: 'Tableau de bord'),
-                        Tab(text: 'Statistiques'),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Administration',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  Icons.admin_panel_settings,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const TabBar(
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.white70,
+                          indicatorColor: Colors.white,
+                          tabs: [
+                            Tab(text: 'Tableau de bord'),
+                            Tab(text: 'Statistiques'),
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _PageTableauDeBord(
-                      resultats: resultatsFiltres,
-                      anneeSelectionnee: anneeSelectionnee,
-                      repository: repository,
-                      onRechercheChangee: (value) {
-                        setState(() {
-                          recherche = value;
-                        });
-                      },
-                      onAnneeChangee: (value) {
-                        setState(() {
-                          anneeSelectionnee = value;
-                        });
-                      },
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _PageTableauDeBord(
+                          resultats: resultatsFiltres,
+                          anneeSelectionnee: anneeSelectionnee,
+                          repository: repository,
+                          onRechercheChangee: (value) {
+                            setState(() {
+                              recherche = value;
+                            });
+                          },
+                          onAnneeChangee: (value) {
+                            setState(() {
+                              anneeSelectionnee = value;
+                            });
+                          },
+                        ),
+                        _PageStatistiques(
+                          resultats: donnees,
+                          anneeSelectionnee: anneeSelectionnee,
+                          onAnneeChangee: (value) {
+                            setState(() {
+                              anneeSelectionnee = value;
+                            });
+                          },
+                          repository: repository,
+                        ),
+                      ],
                     ),
-                    _PageStatistiques(
-                      resultats: resultats,
-                      anneeSelectionnee: anneeSelectionnee,
-                      onAnneeChangee: (value) {
-                        setState(() {
-                          anneeSelectionnee = value;
-                        });
-                      },
-                      repository: repository,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -187,7 +198,7 @@ class _PageTableauDeBord extends StatelessWidget {
                 subtitle: Text(
                   '${resultat.matiere} · ${resultat.score}/${resultat.totalQuestions}'
                   '\n${_dateTexte(resultat.date)} · '
-                  '${repository.anneeScolaire(resultat.date)}',
+                  '${resultat.date == null ? 'Année inconnue' : repository.anneeScolaire(resultat.date!)}',
                 ),
                 isThreeLine: true,
               ),
@@ -197,7 +208,11 @@ class _PageTableauDeBord extends StatelessWidget {
   }
 }
 
-String _dateTexte(DateTime date) {
+String _dateTexte(DateTime? date) {
+  if (date == null) {
+    return 'Date inconnue';
+  }
+
   final jour = date.day.toString().padLeft(2, '0');
   final mois = date.month.toString().padLeft(2, '0');
   return '$jour/$mois/${date.year}';

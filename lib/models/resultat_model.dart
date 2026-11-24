@@ -28,8 +28,19 @@ class Resultat {
       matiere: data['matiere'] ?? '',
       score: data['score'] ?? 0,
       totalQuestions: data['totalQuestions'] ?? 0,
-      datePassage:
-          (data['datePassage'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      datePassage: (data['datePassage'] as Timestamp?)?.toDate(),
     );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'matiereId': matiereId,
+      'matiere': matiere,
+      'score': score,
+      'totalQuestions': totalQuestions,
+      'datePassage': datePassage == null
+          ? null
+          : Timestamp.fromDate(datePassage!),
+    };
   }
 }

@@ -1,33 +1,47 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:skillo/models/resultat_model.dart';
 import 'package:skillo/models/resultat_candidat_model.dart';
+import 'package:skillo/models/user_model.dart';
 
 class TableauDeBordRepository {
-  List<ResultatCandidat> getResultats() {
-    return [
-      ResultatCandidat(
-        prenom: 'Ami',
-        nom: 'Diallo',
-        matiere: 'HTML / CSS',
-        score: 8,
-        totalQuestions: 10,
-        date: DateTime(2026, 11, 20),
-      ),
-      ResultatCandidat(
-        prenom: 'Yanis',
-        nom: 'Morel',
-        matiere: 'Java',
-        score: 4,
-        totalQuestions: 10,
-        date: DateTime(2026, 11, 18),
-      ),
-      ResultatCandidat(
-        prenom: 'Camille',
-        nom: 'Bernard',
-        matiere: 'Algorithmique',
-        score: 9,
-        totalQuestions: 10,
-        date: DateTime(2026, 4, 8),
-      ),
-    ];
+  TableauDeBordRepository({FirebaseFirestore? firestore})
+    : _firestore = firestore;
+
+  final FirebaseFirestore? _firestore;
+
+  FirebaseFirestore get _database => _firestore ?? FirebaseFirestore.instance;
+
+  CollectionReference get _resultats => _database.collection('Resultat');
+
+  CollectionReference get _utilisateurs => _database.collection('User');
+
+  Stream<List<ResultatCandidat>> getResultats() {
+    return _resultats.snapshots().asyncMap((snapshot) async {
+      final resultats = <ResultatCandidat>[];
+
+      for (final document in snapshot.docs) {
+        final resultat = Resultat.fromFirestore(document);
+        final utilisateurDocument = await _utilisateurs
+            .doc(resultat.userId)
+            .get();
+        final utilisateur = utilisateurDocument.exists
+            ? User.fromFirestore(utilisateurDocument)
+            : null;
+
+        resultats.add(
+          ResultatCandidat(
+            prenom: utilisateur?.prenom ?? '',
+            nom: utilisateur?.nom ?? resultat.userId,
+            matiere: resultat.matiere,
+            score: resultat.score,
+            totalQuestions: resultat.totalQuestions,
+            date: resultat.datePassage,
+          ),
+        );
+      }
+
+      return resultats;
+    });
   }
 
   List<ResultatCandidat> filtrerResultats(
@@ -44,14 +58,23 @@ class TableauDeBordRepository {
       );
       final correspondAlaAnnee =
           anneeSelectionnee == 'Toutes' ||
-          anneeScolaire(resultat.date) == anneeSelectionnee;
+          (resultat.date != null &&
+              anneeScolaire(resultat.date!) == anneeSelectionnee);
 
       if (correspondAlaRecherche && correspondAlaAnnee) {
         liste.add(resultat);
       }
     }
 
-    liste.sort((a, b) => b.date.compareTo(a.date));
+    liste.sort((a, b) {
+      if (a.date == null) {
+        return b.date == null ? 0 : 1;
+      }
+      if (b.date == null) {
+        return -1;
+      }
+      return b.date!.compareTo(a.date!);
+    });
     return liste;
   }
 

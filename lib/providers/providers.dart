@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skillo/models/matiere_model.dart';
 import 'package:skillo/models/question_model.dart';
+import 'package:skillo/models/resultat_candidat_model.dart';
 import 'package:skillo/repository/matiere_repository.dart';
 import 'package:skillo/repository/questionqcm_repository.dart';
 import 'package:skillo/repository/user_repository.dart';
@@ -33,4 +34,8 @@ final tableauDeBordRepositoryProvider = Provider<TableauDeBordRepository>((
 
 final userRepoitoryProvider = Provider<UserRepository>((ref) {
   return UserRepository();
+});
+
+final getResultatAdminProvider = StreamProvider<List<ResultatCandidat>>((ref) {
+  return ref.watch(tableauDeBordRepositoryProvider).getResultats();
 });
