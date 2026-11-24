@@ -1,9 +1,9 @@
-// story 1 vue : connexion du candidat 
+// VUE : connexion du candidat (story I)
 // la logique = candidat_service.dart
 
 import 'package:material_ui/material_ui.dart';
 import 'package:skillo/services/candidat_service.dart';
-import 'package:skillo/views/admin/connexion_admin.dart';
+import 'package:skillo/views/admin/acueil_admin.dart'; // TEST
 import 'package:skillo/views/utilisateur/accueil.dart';
 import 'package:skillo/views/utilisateur/inscription.dart';
 
@@ -22,26 +22,23 @@ class _ConnexionState extends State<Connexion> {
 
   String message = ""; // message d'erreur affiché en rouge
 
-  // clique sur "Se connecter"
+  // quand on clique sur "Se connecter"
   Future<void> seConnecter() async {
     String resultat = await service.connexion(
       nomController.text.trim(),
       mailController.text.trim(),
     );
 
-    //  page a été fermée = s'arrête
     if (!mounted) {
       return;
     }
 
     if (resultat == "") {
-      // connexion réussie 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Accueil()),
       );
     } else {
-      // erreur affiché
       setState(() {
         message = resultat;
       });
@@ -99,7 +96,9 @@ class _ConnexionState extends State<Connexion> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ConnexionAdmin()),
+                  // Test va directement à l'accueil admin sans connexion
+                  // remettre après : ConnexionAdmin()
+                  MaterialPageRoute(builder: (context) => AcueilAdmin()),
                 );
               },
               child: Text("Espace administrateur"),
