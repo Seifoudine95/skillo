@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Resultat {
   final String? id;
   final String userId;
-  final String matiereId;
+  final String? matiereId;
   final String matiere;
   final int score;
   final int totalQuestions;
@@ -12,7 +12,7 @@ class Resultat {
   Resultat({
     this.id,
     required this.userId,
-    required this.matiereId,
+    this.matiereId,
     required this.matiere,
     required this.score,
     required this.totalQuestions,

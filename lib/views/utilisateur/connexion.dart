@@ -1,7 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:skillo/repository/user_repository.dart';
+import 'package:skillo/providers/providers.dart';
 import 'package:skillo/views/utilisateur/accueil.dart';
 import 'package:skillo/views/utilisateur/inscription.dart';
 
@@ -19,10 +19,16 @@ class _ConnexionState extends ConsumerState<Connexion> {
 
   final TextEditingController _mail = TextEditingController();
 
-
+  @override
+  void dispose() {
+    super.dispose();
+    _nom.dispose();
+    _mail.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final userId = ref.watch(userProvider).utilisateurCourant?.id ?? "";
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.symmetric(
@@ -75,12 +81,16 @@ class _ConnexionState extends ConsumerState<Connexion> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      UserRepository().getUser(_nom.text, _mail.text);
+                    await ref
+                          .read(userProvider)
+                          .connexionUser(_nom.text, _mail.text);
+
                       _nom.text = "";
                       _mail.text = "";
-                      Navigator.pushReplacement(
+                      if (!context.mounted) return;
+                      Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => Accueil()),
                       );
@@ -88,7 +98,7 @@ class _ConnexionState extends ConsumerState<Connexion> {
                   },
                   child: Text('Se connecter'),
                 ),
-                SizedBox(height: 20,),
+                SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
                     Navigator.push(

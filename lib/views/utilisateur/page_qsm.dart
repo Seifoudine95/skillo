@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:skillo/models/question_model.dart';
 import 'package:skillo/providers/providers.dart';
 import 'package:skillo/views/utilisateur/accueil.dart';
 
@@ -16,7 +17,7 @@ class PageQsm extends ConsumerStatefulWidget {
 class _PageQsmState extends ConsumerState<PageQsm> {
   late String coure = widget.nomMat;
 
-  Duration _minute = Duration(seconds: 5);
+  Duration _minute = Duration(seconds: 10);
 
   late Timer timer = Timer.periodic(Duration(seconds: 1), (timer) {
     setState(() {
@@ -38,6 +39,8 @@ class _PageQsmState extends ConsumerState<PageQsm> {
   int courante = 0;
   int selection = 0;
   bool isV = false;
+  String? reponse;
+  int score = 0;
 
   @override
   void initState() {
@@ -54,6 +57,21 @@ class _PageQsmState extends ConsumerState<PageQsm> {
   @override
   Widget build(BuildContext context) {
     final question = ref.watch(getQuestionProvider(coure));
+    final userId = ref.watch(userProvider).utilisateurCourant?.id ?? "";
+    final totalQuestions = question.value?.length;
+
+    void verifierReponse(QuestionQcm questionActuelle, String repChoisie) {
+      // 1. On récupère le texte de la bonne réponse grâce à reponseNum (index 0, 1, 2 ou 3)
+      final bonneReponse = questionActuelle.reponse;
+
+      // 2. On compare directement les deux textes
+      if (repChoisie == bonneReponse) {
+        setState(() {
+          score++;
+        });
+      }
+    }
+
     return Scaffold(
       body: question.when(
         error: (err, stack) => Center(child: Text('Erreur: $err')),
@@ -129,8 +147,7 @@ class _PageQsmState extends ConsumerState<PageQsm> {
                                 setState(() {
                                   selection = value!;
                                   isV = true;
-                                  // reponse = qsm;
-                                  // notes(reponse);
+                                  reponse = qsm;
                                 });
                               },
                               child: RadioListTile(
@@ -143,22 +160,42 @@ class _PageQsmState extends ConsumerState<PageQsm> {
                         SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
-                            setState(() {
-                              if (courante < questions.length - 1) {
+                            if (reponse != null) {
+                              verifierReponse(questions[courante], reponse!);
+                            }
+
+                            if (courante < questions.length - 1) {
+                              setState(() {
                                 courante++;
-                                _minute = Duration(seconds: 5);
+                                _minute = const Duration(seconds: 10);
                                 isV = false;
-                              } else {
-                                timer.cancel();
-                                showDialog(
-                                  barrierDismissible: false,
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return dialogue(context);
-                                  },
-                                );
-                              }
-                            });
+                                reponse = null;
+                              });
+                            } else {
+                              timer.cancel();
+
+                              ref
+                                  .read(resultatProvider)
+                                  .addResulta(
+                                    userId,
+                                    coure,
+                                    score,
+                                    totalQuestions!,
+                                    DateTime.now(),
+                                  )
+                                  .then(
+                                    (_) => ref
+                                        .read(userProvider)
+                                        .getResultat(userId),
+                                  );
+                              showDialog(
+                                barrierDismissible: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return dialogue(context);
+                                },
+                              );
+                            }
                           },
                           child: Container(
                             padding: EdgeInsets.symmetric(

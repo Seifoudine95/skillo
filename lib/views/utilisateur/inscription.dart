@@ -1,17 +1,18 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:skillo/repository/user_repository.dart';
+import 'package:skillo/providers/providers.dart';
 import 'package:skillo/views/utilisateur/accueil.dart';
 import 'package:skillo/views/utilisateur/connexion.dart';
 
-class Inscription extends StatefulWidget {
+class Inscription extends ConsumerStatefulWidget {
   const Inscription({super.key});
 
   @override
-  State<Inscription> createState() => _InscriptionState();
+  ConsumerState<Inscription> createState() => _InscriptionState();
 }
 
-class _InscriptionState extends State<Inscription> {
+class _InscriptionState extends ConsumerState<Inscription> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nom = TextEditingController();
@@ -31,6 +32,16 @@ class _InscriptionState extends State<Inscription> {
   ];
 
   String? _motivation;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _nom.dispose();
+    _prenom.dispose();
+    _mail.dispose();
+    _age.dispose();
+    _adressePostal.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +140,7 @@ class _InscriptionState extends State<Inscription> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return 'Veillez entrer votre adresse postal';
                     }
                     return null;
                   },
@@ -162,26 +173,26 @@ class _InscriptionState extends State<Inscription> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      UserRepository().addUser(
-                        _nom.text,
-                        _prenom.text,
-                        _mail.text,
-                        _age.text,
-                        _adressePostal.text,
-                        _motivation!,
-                      );
+                      await ref
+                          .read(userProvider)
+                          .inscriptionUser(
+                            _nom.text,
+                            _prenom.text,
+                            _mail.text,
+                            _age.text,
+                            _adressePostal.text,
+                            _motivation!,
+                          );
                       _nom.text = "";
                       _prenom.text = "";
                       _mail.text = "";
                       _age.text = "";
                       _adressePostal.text = "";
-                      _motivation != "";
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => Accueil()),
-                      );
+                      _motivation = "";
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
                     }
                   },
                   child: Text('S\'inscrire'),

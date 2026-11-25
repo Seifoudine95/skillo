@@ -78,21 +78,37 @@ class Accueil extends ConsumerWidget {
                   child: ListView.builder(
                     itemCount: matiere.length,
                     itemBuilder: (context, index) {
+                      final bool dejaTermine = ref
+                          .watch(userProvider)
+                          .estCoursTermine(matiere[index].nom);
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         child: ListTile(
                           onTap: () {
-                            // ref.read(getQuestionProvider(matiere[index].nom));
-                            // Future.delayed(Duration(seconds: 3));
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PageQsm(nomMat: matiere[index].nom),
-                              ),
-                            );
+                            if (dejaTermine) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Center(
+                                      child: Text("Cours déjà validé "),
+                                    ),
+                                  );
+                                },
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      PageQsm(nomMat: matiere[index].nom),
+                                ),
+                              );
+                            }
                           },
+                          subtitle: Text(
+                            dejaTermine ? 'Cours déjà validé' : 'Disponible',
+                          ),
                           title: Text(matiere[index].nom),
                           style: ListTileStyle.list,
                           shape: RoundedRectangleBorder(
